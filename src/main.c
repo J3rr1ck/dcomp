@@ -14,7 +14,7 @@
 #include <vulkan/vulkan_wayland.h>
 #include <sys/epoll.h>
 
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
 #include <libinput.h>
 #endif
 
@@ -69,7 +69,7 @@ int main(int argc, char **argv) {
     ev[0].data.fd = wayland_fd;
     epoll_ctl(epoll_fd, EPOLL_CTL_ADD, wayland_fd, &ev[0]);
 
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
     int li_fd = -1;
     if (server.input && server.input->li) {
         li_fd = libinput_get_fd(server.input->li);
@@ -88,7 +88,7 @@ int main(int argc, char **argv) {
             if (ev[i].data.fd == wayland_fd) {
                 wl_event_loop_dispatch(loop, 0);
             }
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
             if (li_fd >= 0 && ev[i].data.fd == li_fd) {
                 if (libinput_next_event(server.input->li) != LIBINPUT_EVENT_NONE) {
                     input_dispatch(server.input);

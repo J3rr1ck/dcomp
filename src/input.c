@@ -11,7 +11,7 @@
 #include <errno.h>
 #include <xkbcommon/xkbcommon.h>
 
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
 #include <libinput.h>
 #include <libudev.h>
 #endif
@@ -22,7 +22,7 @@ struct dcomp_input *input_create(struct dcomp_server *server) {
     struct dcomp_input *in = calloc(1, sizeof(struct dcomp_input));
     in->server = server;
 
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
     in->udev = udev_new();
     if (!in->udev) {
         fprintf(stderr, "failed to create udev context\n");
@@ -53,7 +53,7 @@ struct dcomp_input *input_create(struct dcomp_server *server) {
     in->xkb_ctx = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
     if (!in->xkb_ctx) {
         fprintf(stderr, "failed to create xkb context\n");
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
         libinput_unref(in->li);
         udev_unref(in->udev);
 #endif
@@ -70,7 +70,7 @@ struct dcomp_input *input_create(struct dcomp_server *server) {
     if (!in->xkb_keymap) {
         fprintf(stderr, "failed to compile xkb keymap\n");
         xkb_context_unref(in->xkb_ctx);
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
         libinput_unref(in->li);
         udev_unref(in->udev);
 #endif
@@ -83,7 +83,7 @@ struct dcomp_input *input_create(struct dcomp_server *server) {
         fprintf(stderr, "failed to create xkb state\n");
         xkb_keymap_unref(in->xkb_keymap);
         xkb_context_unref(in->xkb_ctx);
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
         libinput_unref(in->li);
         udev_unref(in->udev);
 #endif
@@ -103,7 +103,7 @@ void input_destroy(struct dcomp_input *in) {
     if (in->xkb_state) xkb_state_unref(in->xkb_state);
     if (in->xkb_keymap) xkb_keymap_unref(in->xkb_keymap);
     if (in->xkb_ctx) xkb_context_unref(in->xkb_ctx);
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
     if (in->li) libinput_unref(in->li);
     if (in->udev) udev_unref(in->udev);
 #endif
@@ -120,7 +120,7 @@ void input_request_logout(struct dcomp_input *in) {
 }
 
 void input_dispatch(struct dcomp_input *in) {
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
     if (!in || !in->li) return;
 
     struct libinput_event *ev;

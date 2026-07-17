@@ -8,7 +8,7 @@ struct dcomp_view;  // forward declaration from compositor.h
 #include <stdbool.h>
 #include "config.h"
 
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
 #include <libinput.h>
 #include <libudev.h>
 #endif
@@ -17,7 +17,7 @@ struct dcomp_input {
     struct dcomp_server *server;
     struct wl_resource *seat_resource;
 
-#if HAVE_LIBINPUT && HAVE_UDEV
+#if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
     struct libinput *li;
     struct udev *udev;
 #endif
