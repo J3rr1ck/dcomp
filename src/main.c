@@ -90,9 +90,7 @@ int main(int argc, char **argv) {
             }
 #if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
             if (li_fd >= 0 && ev[i].data.fd == li_fd) {
-                if (libinput_next_event(server.input->li) != LIBINPUT_EVENT_NONE) {
-                    input_dispatch(server.input);
-                }
+                input_dispatch(server.input);
             }
 #endif
         }

@@ -14,6 +14,21 @@
 #if defined(HAVE_LIBINPUT) && defined(HAVE_UDEV)
 #include <libinput.h>
 #include <libudev.h>
+
+static int libinput_open_restricted(const char *path, int flags, void *user_data) {
+    (void)user_data;
+    return open(path, flags);
+}
+
+static void libinput_close_restricted(int fd, void *user_data) {
+    (void)user_data;
+    close(fd);
+}
+
+static const struct libinput_interface libinput_iface = {
+    .open_restricted = libinput_open_restricted,
+    .close_restricted = libinput_close_restricted,
+};
 #endif
 
 extern volatile int dcomp_running;
@@ -30,7 +45,7 @@ struct dcomp_input *input_create(struct dcomp_server *server) {
         return NULL;
     }
 
-    in->li = libinput_udev_create_context(LIBINPUT_CONTEXT_BACKGROUND, NULL, in->udev);
+    in->li = libinput_udev_create_context(&libinput_iface, NULL, in->udev);
     if (!in->li) {
         fprintf(stderr, "failed to create libinput context\n");
         udev_unref(in->udev);
@@ -128,8 +143,9 @@ void input_dispatch(struct dcomp_input *in) {
         int type = libinput_event_get_type(ev);
         switch (type) {
         case LIBINPUT_EVENT_POINTER_MOTION: {
-            double dx = libinput_event_pointer_get_dx(ev);
-            double dy = libinput_event_pointer_get_dy(ev);
+            struct libinput_event_pointer *ptr = libinput_event_get_pointer_event(ev);
+            double dx = libinput_event_pointer_get_dx(ptr);
+            double dy = libinput_event_pointer_get_dy(ptr);
             in->cursor_x += (int32_t)dx;
             in->cursor_y += (int32_t)dy;
             struct dcomp_renderer *r = in->server->renderer;
@@ -140,8 +156,9 @@ void input_dispatch(struct dcomp_input *in) {
             break;
         }
         case LIBINPUT_EVENT_POINTER_BUTTON: {
-            uint32_t btn = libinput_event_pointer_get_button(ev);
-            bool pressed = libinput_event_pointer_get_button_state(ev) == LIBINPUT_BUTTON_STATE_PRESSED;
+            struct libinput_event_pointer *ptr = libinput_event_get_pointer_event(ev);
+            uint32_t btn = libinput_event_pointer_get_button(ptr);
+            bool pressed = libinput_event_pointer_get_button_state(ptr) == LIBINPUT_BUTTON_STATE_PRESSED;
             if (btn == 0x110 && pressed) {
                 in->button_pressed = true;
                 struct dcomp_desktop *d = in->server->desktop;
