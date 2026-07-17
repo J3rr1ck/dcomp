@@ -18,6 +18,10 @@ struct dcomp_desktop {
     struct dcomp_texture *panel_tex;
     uint32_t panel_h;
 
+    // logout button area (within panel)
+    uint32_t logout_btn_x, logout_btn_y;
+    uint32_t logout_btn_w, logout_btn_h;
+
     // active window tracking
     struct dcomp_view *active_view;
 };

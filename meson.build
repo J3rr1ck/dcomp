@@ -7,6 +7,14 @@ wayland_client = dependency('wayland-client')
 wayland_protocols = dependency('wayland-protocols', required: false)
 vulkan = dependency('vulkan')
 xkbcommon = dependency('xkbcommon')
+libinput = dependency('libinput', required: false)
+udev = dependency('libudev', required: false)
+
+# Generate config header
+conf_data = configuration_data()
+conf_data.set('HAVE_LIBINPUT', libinput.found())
+conf_data.set('HAVE_UDEV', udev.found())
+configure_file(input : 'config.h.in', output : 'config.h', configuration : conf_data)
 
 
 # Wayland scanner
@@ -79,10 +87,14 @@ dcomp = executable('dcomp',
     dcomp_src,
     xdg_shell_c, xdg_shell_h,
     vert_h, frag_h,
-    dependencies : [wayland_server, vulkan, xkbcommon],
+    dependencies : [wayland_server, vulkan, xkbcommon] + (libinput.found() ? [libinput] : []) + (udev.found() ? [udev] : []),
     include_directories : [include_directories('.')],
     install : true,
 )
+
+# Install desktop entry and session script
+install_data('dcomp.desktop', install_dir : 'share/wayland-sessions')
+install_data('dcomp-session', install_dir : 'bin')
 
 # Panel (stub, not built by default)
 # panel_src = ['src/panel.c']

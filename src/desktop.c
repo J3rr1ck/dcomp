@@ -6,20 +6,40 @@
 #include <string.h>
 
 static void render_panel(struct dcomp_desktop *d) {
-    // Render a simple panel texture: dark bar with some text
     uint32_t w = d->server->renderer->output_w;
     uint32_t h = d->panel_h;
     uint32_t *pixels = calloc(w * h, 4);
     for (uint32_t y = 0; y < h; y++) {
         for (uint32_t x = 0; x < w; x++) {
-            // Dark background
             pixels[y * w + x] = 0x202020FF;
         }
     }
-    // Draw some simple text-like pattern (just a horizontal line)
-    for (uint32_t x = 0; x < w; x++) {
-        pixels[h/2 * w + x] = 0xFFFFFFFF;
+    // Draw a logout button at the right side (red square with white X)
+    uint32_t btn_size = h - 4;
+    uint32_t btn_x = w - btn_size - 4;
+    uint32_t btn_y = 2;
+    d->logout_btn_x = btn_x;
+    d->logout_btn_y = btn_y;
+    d->logout_btn_w = btn_size;
+    d->logout_btn_h = btn_size;
+
+    for (uint32_t by = btn_y; by < btn_y + btn_size; by++) {
+        for (uint32_t bx = btn_x; bx < btn_x + btn_size; bx++) {
+            pixels[by * w + bx] = 0xCC2222FF; // red background
+        }
     }
+    // Draw a white X
+    uint32_t cx = btn_x + btn_size / 2;
+    uint32_t cy = btn_y + btn_size / 2;
+    for (int32_t i = -3; i <= 3; i++) {
+        uint32_t x1 = cx + i;
+        uint32_t y1 = cy + i;
+        uint32_t x2 = cx + i;
+        uint32_t y2 = cy - i;
+        if (x1 < w && y1 < h) pixels[y1 * w + x1] = 0xFFFFFFFF;
+        if (x2 < w && y2 < h) pixels[y2 * w + x2] = 0xFFFFFFFF;
+    }
+
     d->panel_tex = renderer_create_texture(d->server->renderer, w, h, pixels);
     free(pixels);
 }
@@ -28,7 +48,6 @@ static void render_background(struct dcomp_desktop *d) {
     uint32_t w = d->server->renderer->output_w;
     uint32_t h = d->server->renderer->output_h;
     uint32_t *pixels = calloc(w * h, 4);
-    // Gradient background
     for (uint32_t y = 0; y < h; y++) {
         for (uint32_t x = 0; x < w; x++) {
             uint8_t r = (255 * y) / h;
@@ -46,6 +65,10 @@ struct dcomp_desktop *desktop_create(struct dcomp_server *server) {
     d->server = server;
     wl_list_init(&d->views);
     d->panel_h = 32;
+    d->logout_btn_x = 0;
+    d->logout_btn_y = 0;
+    d->logout_btn_w = 0;
+    d->logout_btn_h = 0;
     render_background(d);
     render_panel(d);
     return d;
@@ -59,7 +82,6 @@ void desktop_destroy(struct dcomp_desktop *d) {
 }
 
 void desktop_layout(struct dcomp_desktop *d) {
-    // Arrange views: panel at top, windows tiled
     int32_t y = d->panel_h;
     struct dcomp_view *view;
     wl_list_for_each(view, &d->views, link) {
@@ -73,18 +95,12 @@ void desktop_layout(struct dcomp_desktop *d) {
 }
 
 void desktop_draw(struct dcomp_desktop *d) {
-    // This will be called each frame to record commands
     struct dcomp_renderer *r = d->server->renderer;
-    // Draw background
     renderer_draw_view(r, d->bg_tex, 0, 0, r->output_w, r->output_h);
-    // Draw panel
     renderer_draw_view(r, d->panel_tex, 0, 0, r->output_w, d->panel_h);
-    // Draw each view
     struct dcomp_view *view;
     wl_list_for_each(view, &d->views, link) {
         if (!view->surface || !view->surface->has_buffer) continue;
-        // Create texture from buffer if needed
-        // For now skip actual client textures
     }
 }
 
@@ -98,6 +114,7 @@ void desktop_add_view(struct dcomp_desktop *d, struct dcomp_surface *surf) {
 }
 
 void desktop_remove_view(struct dcomp_desktop *d, struct dcomp_surface *surf) {
+    (void)d;
     if (!surf->view) return;
     struct dcomp_view *view = surf->view;
     wl_list_remove(&view->link);

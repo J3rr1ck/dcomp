@@ -1,0 +1,11 @@
+#!/bin/bash
+# dcomp-session - launch dcompositor from a login manager (COSMIC, GDM, SDDM, etc.)
+
+# This script is called by the display manager after starting the Wayland session.
+# It starts the dcomp compositor and waits for it to finish.
+
+# Kill any existing dcomp processes
+killall dcomp 2>/dev/null
+
+# Start the compositor
+exec dcomp
