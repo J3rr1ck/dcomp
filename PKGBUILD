@@ -8,14 +8,14 @@ url="https://github.com/J3rr1ck/dcomp"
 license=('MIT')
 depends=('wayland' 'vulkan-icd-loader' 'libxkbcommon')
 makedepends=('meson' 'ninja' 'glslang' 'vulkan-headers' 'wayland-protocols')
-source=("${pkgname}-${pkgver}.tar.gz")
+source=("git+https://github.com/J3rr1ck/dcomp.git")
 md5sums=('SKIP')
 build() {
-    cd "${srcdir}/${pkgname}-${pkgver}"
+    cd "${srcdir}/${pkgname}"
     meson setup build --prefix=/usr
     meson compile -C build
 }
 package() {
-    cd "${srcdir}/${pkgname}-${pkgver}"
+    cd "${srcdir}/${pkgname}"
     DESTDIR="${pkgdir}" meson install -C build
 }
