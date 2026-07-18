@@ -103,8 +103,9 @@ static VkShaderModule create_shader(VkDevice dev, const void *code, size_t sz) {
     return mod;
 }
 
-struct dcomp_renderer *renderer_create(struct dcomp_server *server, int fd) {
+struct dcomp_renderer *renderer_create(struct dcomp_server *server, struct wl_display *client_display, int fd) {
     (void)fd;
+    (void)server;
     struct dcomp_renderer *r = calloc(1, sizeof(struct dcomp_renderer));
 
     r->instance = create_instance();
@@ -116,7 +117,7 @@ struct dcomp_renderer *renderer_create(struct dcomp_server *server, int fd) {
     // Create Wayland surface
     VkWaylandSurfaceCreateInfoKHR winfo = {
         .sType = VK_STRUCTURE_TYPE_WAYLAND_SURFACE_CREATE_INFO_KHR,
-        .display = (struct wl_display *)server->display,
+        .display = (struct wl_display *)client_display,
     };
     VkResult res = vkCreateWaylandSurfaceKHR(r->instance, &winfo, NULL, &r->surface);
     if (res != VK_SUCCESS) {
@@ -156,7 +157,11 @@ struct dcomp_renderer *renderer_create(struct dcomp_server *server, int fd) {
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .presentMode = VK_PRESENT_MODE_FIFO_KHR,
     };
-    vkCreateSwapchainKHR(r->device, &sc_info, NULL, &r->swapchain);
+    VkResult sc_res = vkCreateSwapchainKHR(r->device, &sc_info, NULL, &r->swapchain);
+    if (sc_res != VK_SUCCESS) {
+        fprintf(stderr, "vkCreateSwapchainKHR failed: %d\n", sc_res);
+        exit(1);
+    }
 
     // Get swapchain images
     uint32_t sc_len;
@@ -164,6 +169,16 @@ struct dcomp_renderer *renderer_create(struct dcomp_server *server, int fd) {
     r->swapchain_len = sc_len;
     r->swapchain_images = malloc(sc_len * sizeof(VkImage));
     vkGetSwapchainImagesKHR(r->device, r->swapchain, &sc_len, r->swapchain_images);
+
+    // Allocate fences for each swapchain image
+    r->fences = malloc(sc_len * sizeof(VkFence));
+    for (uint32_t i = 0; i < sc_len; i++) {
+        VkFenceCreateInfo fence_info = {
+            .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+            .flags = VK_FENCE_CREATE_SIGNALED_BIT,
+        };
+        vkCreateFence(r->device, &fence_info, NULL, &r->fences[i]);
+    }
 
     // Create image views
     r->swapchain_views = malloc(sc_len * sizeof(VkImageView));
@@ -472,4 +487,6 @@ void renderer_destroy_texture(struct dcomp_renderer *r, struct dcomp_texture *te
 void renderer_draw_view(struct dcomp_renderer *r, struct dcomp_texture *tex,
                         int32_t x, int32_t y, uint32_t w, uint32_t h) {
     (void)r; (void)tex; (void)x; (void)y; (void)w; (void)h;
+    // TODO: implement texture-based rendering
+    // For now, the compositor draws a solid color via the pipeline
 }

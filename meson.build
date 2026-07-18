@@ -87,7 +87,7 @@ dcomp = executable('dcomp',
     dcomp_src,
     xdg_shell_c, xdg_shell_h,
     vert_h, frag_h,
-    dependencies : [wayland_server, vulkan, xkbcommon] + (libinput.found() ? [libinput] : []) + (udev.found() ? [udev] : []),
+    dependencies : [wayland_server, wayland_client, vulkan, xkbcommon] + (libinput.found() ? [libinput] : []) + (udev.found() ? [udev] : []),
     include_directories : [include_directories('.')],
     install : true,
 )

@@ -4,6 +4,7 @@
 #include <vulkan/vulkan.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <wayland-client.h>
 
 struct dcomp_server;
 
@@ -37,7 +38,7 @@ struct dcomp_renderer {
     VkShaderModule vert_mod, frag_mod;
 };
 
-struct dcomp_renderer *renderer_create(struct dcomp_server *server, int fd);
+struct dcomp_renderer *renderer_create(struct dcomp_server *server, struct wl_display *client_display, int fd);
 void renderer_destroy(struct dcomp_renderer *r);
 void renderer_commit(struct dcomp_renderer *r);
 

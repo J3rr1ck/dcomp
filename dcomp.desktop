@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=dcomp
 Comment=A pure Vulkan Wayland compositor with minimal desktop environment
-Exec=dcomp
+Exec=dcomp-session
 Type=Application
 DesktopSession=dcomp
 Keywords=compositor;desktop;wayland
